@@ -18,6 +18,7 @@ steps:
    
    commands:
       - sudo chown -R ci ./
+      - sudo apt install bc
       - git clone --depth=1 $repo1 -b daisy msm8953 && cd msm8953
       - git clone --depth=1 --single-branch https://github.com/mvaisakh/gcc-arm64.git gcc-arm64
       - git clone --depth=1 --single-branch https://github.com/mvaisakh/gcc-arm.git gcc-arm
