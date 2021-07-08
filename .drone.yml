@@ -19,9 +19,12 @@ steps:
    commands:
       - sudo chown -R ci ./
       - git clone --depth=1 $repo1 -b daisy msm8953 && cd msm8953
+      - export CROSS_COMPILE="$(pwd)/clang/bin/aarch64-linux-gnu-"
+      - export CROSS_COMPILE_ARM32="$(pwd)/clang/bin/arm-linux-gnueabi-"
       - git clone --depth=1 --single-branch https://github.com/kdrag0n/proton-clang.git -b master clang
       - export BUILD_START=$(date +"%s")
       - make daisy_defconfig
+      - export ARCH=arm64
       - make -j16 O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
       - export BUILD_END=$(date +"%s")
       - export DIFF=$((BUILD_END - BUILD_START))
