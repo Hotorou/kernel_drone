@@ -1,0 +1,39 @@
+  
+kind: pipeline
+name: Drone
+
+workspace:
+  path: /drone/src
+
+steps:
+ - name: compile
+   image: geopd/builder:update
+   environment:
+     bottoken:
+       from_secret: bottoken
+     chatid:
+       from_secret: chatid
+     repo1:
+       from_secret: repo1
+   commands:
+      - git clone --depth=1 $repo1 -b daisy msm8953 && cd msm8953
+      - git clone --depth=1 --single-branch https://github.com/kdrag0n/proton-clang.git -b master proton
+      - export BUILD_START=$(date +"%s")
+      - export CROSS_COMPILE="$(pwd)/proton/bin/aarch64-linux-gnu-"
+      - export CROSS_COMPILE_ARM32="$(pwd)/proton/bin/arm-linux-gnueabi-"
+      - export ARCH=arm64
+      - make O=out daisy_defconfig
+      - make O=out -j"$(nproc --all)"
+      - export BUILD_END=$(date +"%s")
+      - export DIFF=$((BUILD_END - BUILD_START))
+      - git clone $repo2
+      - cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3 && cd AnyKernel3
+      - export ZIPNAME=Hyouka-Kernel-$(TZ=Asia/Dhaka date +%Y%m%d-%H%M).zip
+      - zip -r9 $ZIPNAME ./*
+      - curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot$bottoken/sendDocument" -F chat_id="$chatid" -F "parse_mode=Markdown" -F caption="*✅ Build finished after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds*"
+
+trigger:
+  branch:
+  - master
+  event:
+  - push
